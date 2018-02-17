@@ -5,36 +5,42 @@
 
 typedef struct 
 {
-	number 			bias;
-	activation_func	activation_function;
+	number 				bias;
+	activation_func		activation_function;
 } network_node;
 
 typedef struct
 {
-	network_node*	input;
-	network_node*	output;
-	number		 	weight;
+	network_node*		input;
+	network_node*		output;
+	number		 		weight;
 } network_link;
 
-typedef struct node_data
+typedef struct
 {
-	number			value;
-} network_data;
+	number				value;
+} network_node_data;
 
 typedef struct 
 {
-	integer			node_count;
-	integer			links_count;
+	integer				node_count;
+	integer				links_count;
 
-	network_node*	nodes;
-	network_link*	links;
+	network_node*		nodes;
+	network_link*		links;
 } network;
 
-network*	create_network(integer node_count, integer links_count);
-number*		create_network_data(network* net);
+typedef struct
+{
+	integer				node_count;
+	network_node_data*	node_data;
+} network_data;
 
-void		destroy_network(network* net);
-void		destroy_network_data(number* data);
+network*		create_network(integer node_count, integer links_count);
+network_data*	create_network_data(integer node_count);
+
+void			destroy_network(network* net);
+void			destroy_network_data(network_data* data);
 
 
 #endif
