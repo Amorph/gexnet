@@ -1,6 +1,8 @@
 #include "network.h"
 #include "memory.h"
 
+#include "string.h"
+
 Network* network_create(Integer node_count, Integer links_count)
 {
 	Network* net = allocator_get()->allocate(sizeof(Network));
@@ -8,6 +10,10 @@ Network* network_create(Integer node_count, Integer links_count)
 	net->links_count = links_count;
 	net->nodes = allocator_get()->allocate(sizeof(*net->nodes) * node_count);
 	net->links = allocator_get()->allocate(sizeof(*net->links) * links_count);
+
+	memset(net->nodes, 0, sizeof(*net->nodes) * node_count);
+	memset(net->links, 0, sizeof(*net->links) * links_count);
+
 	return net;
 }
 
