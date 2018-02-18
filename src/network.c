@@ -1,33 +1,33 @@
 #include "network.h"
 #include "memory.h"
 
-network* create_network(integer node_count, integer links_count)
+Network* network_create(Integer node_count, Integer links_count)
 {
-	network* net = get_allocator()->allocate(sizeof(network));
+	Network* net = allocator_get()->allocate(sizeof(Network));
 	net->node_count = node_count;
 	net->links_count = links_count;
-	net->nodes = get_allocator()->allocate(sizeof(*net->nodes) * node_count);
-	net->links = get_allocator()->allocate(sizeof(*net->links) * links_count);
+	net->nodes = allocator_get()->allocate(sizeof(*net->nodes) * node_count);
+	net->links = allocator_get()->allocate(sizeof(*net->links) * links_count);
 	return net;
 }
 
-network_data* create_network_data(integer node_count)
+NetworkData* network_create_data(Integer node_count)
 {
-	network_data* data = get_allocator()->allocate(sizeof(network_data));
+	NetworkData* data = allocator_get()->allocate(sizeof(NetworkData));
 	data->node_count = node_count;
-	data->node_data = get_allocator()->allocate(sizeof(*data->node_data) * node_count);
+	data->node_data = allocator_get()->allocate(sizeof(*data->node_data) * node_count);
 	return data;
 }
 
-void destroy_network(network* net)
+void network_destroy(Network* net)
 {
-	get_allocator()->free(net->nodes);
-	get_allocator()->free(net->links);
-	get_allocator()->free(net);
+	allocator_get()->free(net->nodes);
+	allocator_get()->free(net->links);
+	allocator_get()->free(net);
 }
 
-void destroy_network_data(network_data* data)
+void network_destroy_data(NetworkData* data)
 {
-	get_allocator()->free(data->node_data);
-	get_allocator()->free(data);
+	allocator_get()->free(data->node_data);
+	allocator_get()->free(data);
 }

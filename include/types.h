@@ -4,14 +4,14 @@
 #include "stddef.h"
 
 
-typedef float	number;
-typedef long	integer;
-typedef short	activation_func;
+typedef float	Number;
+typedef long	Integer;
+typedef short	Activation_func;
 
 typedef struct
 {
 	void* (*allocate)(size_t size);
 	void  (*free)(void* mem);
-}allocator;
+}Allocator;
 
 #endif

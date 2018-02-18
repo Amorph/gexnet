@@ -1,4 +1,9 @@
+#ifndef __GEXNET_MEMORY_H__
+#define __GEXNET_MEMORY_H__
+
 #include "types.h"
 
-void 		set_allocator(allocator* alloc);
-allocator*	get_allocator();
+void 		allocator_set(Allocator* alloc);
+Allocator*	allocator_get();
+
+#endif

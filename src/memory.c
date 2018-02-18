@@ -1,16 +1,16 @@
 #include "memory.h"
 #include <stdlib.h>
 
-allocator default_allocator = { malloc, free };
+Allocator default_allocator = { malloc, free };
 
-static allocator* s_allocator = &default_allocator; 
+static Allocator* s_allocator = &default_allocator; 
 
-void 		set_allocator(allocator* alloc)
+void allocator_set(Allocator* alloc)
 {
 	s_allocator = alloc;
 }
 
-allocator*	get_allocator()
+Allocator* allocator_get()
 {
 	return s_allocator;
 }

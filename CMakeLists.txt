@@ -5,10 +5,12 @@ project(gexnet)
 # Source files to be used in the library
 set(library_HEADERS
 	include/types.h
+	include/feedforward.h
 	include/memory.h
 	include/network.h
 )
 set(library_SOURCES
+	src/feedforward.c
     src/network.c
     src/memory.c
 )
