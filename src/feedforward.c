@@ -18,14 +18,14 @@ void ff_network_destroy(FFNetwork * network)
 	for (int i = 0; i < network->layers_count; i++)
 	{
 		if (network->layers[i])
-			allocator_get()->free(network->layers[i]);
+			network_destroy(network->layers[i]);
 	}
 	allocator_get()->free(network);
 }
 
 void ff_network_init_layer(FFNetwork* network, Integer layer, Integer nodes, Integer links)
 {
-	network->layers[layer] = create_network(nodes, links);
+	network->layers[layer] = network_create(nodes, links);
 }
 
 void ff_network_init_fully_connected_layer(FFNetwork* network, Integer layer, Integer nodes, Integer input_layer)
