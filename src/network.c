@@ -11,8 +11,15 @@ Network* network_create(Integer node_count, Integer links_count)
 	net->nodes = allocator_get()->allocate(sizeof(*net->nodes) * node_count);
 	net->links = allocator_get()->allocate(sizeof(*net->links) * links_count);
 
+	// TODO move init to the Python binding?
 	memset(net->nodes, 0, sizeof(*net->nodes) * node_count);
-	memset(net->links, 0, sizeof(*net->links) * links_count);
+	for (size_t i = 0; i < links_count; i++)
+	{
+		(net->links + i)->input = NULL_LINK;
+		(net->links + i)->output = NULL_LINK;
+		(net->links + i)->weight = 0.f;
+	}
+	//memset(net->links, 0, sizeof(*net->links) * links_count);
 
 	return net;
 }

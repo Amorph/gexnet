@@ -38,6 +38,8 @@ void ff_network_init_fully_connected_layer(FFNetwork* network, Integer layer, In
 	Network* out_l = network->layers[layer];
 	Network* in_l = network->layers[input_layer];
 
+	// TODO add copy nodes
+	/*
 	for (int i = 0; i < input_nodes_count; i++)
 	{
 		NetworkNode* input_node = in_l->nodes + i;
@@ -49,4 +51,5 @@ void ff_network_init_fully_connected_layer(FFNetwork* network, Integer layer, In
 			link->weight = 0.f;
 		}
 	}
+	*/
 }

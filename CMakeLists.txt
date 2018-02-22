@@ -8,11 +8,13 @@ set(library_HEADERS
 	include/feedforward.h
 	include/memory.h
 	include/network.h
+	include/processors.h
 )
 set(library_SOURCES
 	src/feedforward.c
     src/network.c
     src/memory.c
+	src/processors.c
 )
 
 add_library(gexnet STATIC ${library_SOURCES} ${library_HEADERS})

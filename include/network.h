@@ -3,6 +3,14 @@
 
 #include "types.h"
 
+//     Network -> Node -> bias, activation
+//             -> Link -> input, output, weight
+//
+//		Network process in two steps:
+//			1. Process links by formula output += input * weight
+//			2. Apply bias and activation function: node_data = activation_func(node_data + bias)
+
+#define NULL_LINK ((size_t)-1)
 typedef struct 
 {
 	Number 				bias;
@@ -11,8 +19,8 @@ typedef struct
 
 typedef struct
 {
-	NetworkNode*		input;
-	NetworkNode*		output;
+	size_t				input;
+	size_t				output;
 	Number		 		weight;
 } NetworkLink;
 
