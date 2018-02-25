@@ -3,44 +3,53 @@
 
 #include "string.h"
 
-Network* network_create(Integer node_count, Integer links_count)
+Network* network_create()
 {
 	Network* net = allocator_get()->allocate(sizeof(Network));
-	net->node_count = node_count;
-	net->links_count = links_count;
-	net->nodes = allocator_get()->allocate(sizeof(*net->nodes) * node_count);
-	net->links = allocator_get()->allocate(sizeof(*net->links) * links_count);
-
-	// TODO move init to the Python binding?
-	memset(net->nodes, 0, sizeof(*net->nodes) * node_count);
-	for (size_t i = 0; i < links_count; i++)
-	{
-		(net->links + i)->input = NULL_LINK;
-		(net->links + i)->output = NULL_LINK;
-		(net->links + i)->weight = 0.f;
-	}
-	//memset(net->links, 0, sizeof(*net->links) * links_count);
-
+	net->streams_count = 0;
+	net->streams = 0;
 	return net;
-}
-
-NetworkData* network_create_data(Integer node_count)
-{
-	NetworkData* data = allocator_get()->allocate(sizeof(NetworkData));
-	data->node_count = node_count;
-	data->node_data = allocator_get()->allocate(sizeof(*data->node_data) * node_count);
-	return data;
 }
 
 void network_destroy(Network* net)
 {
-	allocator_get()->free(net->nodes);
-	allocator_get()->free(net->links);
+	if (net->streams)
+		allocator_get()->free(net->streams);
 	allocator_get()->free(net);
 }
 
-void network_destroy_data(NetworkData* data)
+size_t network_attach_stream(Network* net, NetworkStream* stream)
 {
-	allocator_get()->free(data->node_data);
-	allocator_get()->free(data);
+	if (!net->streams)
+	{
+		net->streams = allocator_get()->allocate(sizeof(net->streams));
+		net->streams[0] = stream;
+		return 0;
+	}
+	NetworkStream** old_streams = net->streams;
+	net->streams = allocator_get()->allocate(sizeof(net->streams) * net->streams_count + 1);
+	for (int i = 0; i < net->streams_count; i++)
+		net->streams[i] = old_streams[i];
+
+	allocator_get()->free(old_streams);
+	net->streams[net->streams_count] = stream;
+
+	return net->streams_count++;
+}
+
+NetworkStream* network_stream_create(FourCC type, size_t element_size, Integer count)
+{
+	NetworkStream* stream = allocator_get()->allocate(sizeof(NetworkStream) + element_size * count);
+
+	stream->data = stream + 1;
+	stream->type = type;
+	stream->elementSize = element_size;
+	stream->elementCount = count;
+
+	return stream;
+}
+
+void network_stream_destroy(NetworkStream* stream)
+{
+	allocator_get()->free(stream);
 }
