@@ -3,5 +3,6 @@
 
 #include "network.h"
 
+void gexnet_build_in_out_streams(Network* networ);
 
 #endif

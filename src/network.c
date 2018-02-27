@@ -1,7 +1,7 @@
 #include "network.h"
 #include "memory.h"
 
-#include "string.h"
+#include <string.h>
 
 Network* network_create()
 {
@@ -37,7 +37,17 @@ size_t network_attach_stream(Network* net, NetworkStream* stream)
 	return net->streams_count++;
 }
 
-NetworkStream* network_stream_create(FourCC type, size_t element_size, Integer count)
+NetworkStream* network_get_stream_type(Network* net, FourCC type)
+{
+	for (size_t i = 0; i < net->streams_count; i++)
+	{
+		if (net->streams[i]->type == type)
+			return net->streams[i];
+	}
+	return 0;
+}
+
+NetworkStream* network_stream_create(FourCC type, size_t element_size, size_t count)
 {
 	NetworkStream* stream = allocator_get()->allocate(sizeof(NetworkStream) + element_size * count);
 

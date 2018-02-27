@@ -3,7 +3,7 @@
 
 #include "stddef.h"
 #include "stdint.h"
-
+#include <stdbool.h>
 
 typedef float		Number;
 typedef long		Integer;

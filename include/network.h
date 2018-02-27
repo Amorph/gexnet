@@ -13,11 +13,6 @@
 #define FOURCC_FEED_FORWARD_ORDER	GEXNET_MAKE_FOURCC('F','F','O','R')
 
 #define NULL_LINK ((size_t)-1)
-typedef struct 
-{
-	Number 				bias;
-	Activation_func		activation_function;
-} NetworkNode;
 
 typedef struct
 {
@@ -25,12 +20,11 @@ typedef struct
 	size_t				output;
 } NetworkLink;
 
-
 typedef struct
 {
 	FourCC	type;
 	size_t	elementSize;
-	Integer	elementCount;
+	size_t	elementCount;
 	void*	data;
 } NetworkStream;
 
@@ -45,8 +39,9 @@ typedef struct
 Network*		network_create();
 void			network_destroy(Network* net);
 size_t			network_attach_stream(Network* net, NetworkStream* stream);
+NetworkStream*	network_get_stream_type(Network* net, FourCC type);
 
-NetworkStream*	network_stream_create(FourCC type, size_t element_size, Integer count);
+NetworkStream*	network_stream_create(FourCC type, size_t element_size, size_t count);
 void			network_stream_destroy(NetworkStream* stream);
 
 #endif
