@@ -3,6 +3,9 @@
 
 #include "network.h"
 
-void gexnet_build_in_out_streams(Network* networ);
+void gexnet_process_in_out_streams(Network* network);
+void gexnet_process_links(Network* network);
+void gexnet_process_links_weight(Network* network, FourCC weight_data);
+void gexnet_process_stream_add(Network* network, FourCC target, FourCC source);
 
 #endif

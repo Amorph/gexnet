@@ -10,7 +10,7 @@ typedef struct
 	size_t out;
 } in_out_counter;
 
-void gexnet_build_in_out_streams(Network* network)
+void gexnet_process_in_out_streams(Network* network)
 {
 	NetworkStream* nodes = network_get_stream_type(network, FOURCC_DATA);
 	NetworkStream* links = network_get_stream_type(network, FOURCC_LINK);
@@ -55,4 +55,43 @@ void gexnet_build_in_out_streams(Network* network)
 
 	network_attach_stream(network, inputs_steam);
 	network_attach_stream(network, outputs_steam);
+}
+
+void gexnet_process_links(Network* network)
+{
+	gexnet_process_links_weight(network, FOURCC_LINK_WEIGHT);
+}
+
+void gexnet_process_links_weight(Network* network, FourCC weight_stream)
+{
+	NetworkStream* nodes = network_get_stream_type(network, FOURCC_DATA);
+	NetworkStream* links = network_get_stream_type(network, FOURCC_LINK);
+	NetworkStream* weight = network_get_stream_type(network, weight_stream);
+
+	if (!nodes || !links || !weight)
+		return;
+
+	NetworkLink* links_data = links->data;
+	Number* node_data = nodes->data;
+	Number* weight_data = weight->data;
+	for (size_t i = 0; i < links->elementCount; i++)
+	{
+		node_data[links_data[i].output] += node_data[links_data[i].input] * weight_data[i];
+	}
+}
+
+void gexnet_process_stream_add(Network* network, FourCC target, FourCC source)
+{
+	NetworkStream* target_stream = network_get_stream_type(network, target);
+	NetworkStream* source_stream = network_get_stream_type(network, source);
+	if (!target_stream || !source_stream || target_stream->elementCount > source_stream->elementCount)
+		return;
+
+	Number* target_data = target_stream->data;
+	Number* source_data = source_stream->data;
+
+	for (size_t i = 0; i < target_stream->elementCount; i++)
+	{
+		target_data[i] += source_data[i];
+	}
 }
