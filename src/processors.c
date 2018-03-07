@@ -10,7 +10,8 @@ typedef struct
 	size_t out;
 } in_out_counter;
 
-void gexnet_process_in_out_streams(Network* network)
+
+void gexnet_compute_in_out_streams(Network* network)
 {
 	NetworkStream* nodes = network_get_stream_type(network, FOURCC_DATA);
 	NetworkStream* links = network_get_stream_type(network, FOURCC_LINK);
@@ -52,6 +53,8 @@ void gexnet_process_in_out_streams(Network* network)
 		else if (!counter[i].out && counter[i].in)
 			outputs_data[output_idx++] = i;
 	}
+
+	allocator_get()->free(counter);
 
 	network_attach_stream(network, inputs_steam);
 	network_attach_stream(network, outputs_steam);

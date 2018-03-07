@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.0)
 
+
 project(gexnet)
+
 
 # Source files to be used in the library
 set(library_HEADERS
@@ -22,3 +24,5 @@ add_library(gexnet STATIC ${library_SOURCES} ${library_HEADERS})
 target_include_directories(gexnet
     PUBLIC ${PROJECT_SOURCE_DIR}/include
 )
+
+add_subdirectory(test)

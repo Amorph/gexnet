@@ -20,6 +20,7 @@ typedef struct
 	size_t				output;
 } NetworkLink;
 
+
 typedef struct
 {
 	FourCC	type;
@@ -28,6 +29,12 @@ typedef struct
 	void*	data;
 } NetworkStream;
 
+typedef struct
+{
+	NetworkStream* stream;
+	size_t	count;
+	void* data;
+}NetworkStreamLockData;
 
 typedef struct
 {
@@ -36,12 +43,16 @@ typedef struct
 } Network;
 
 
-Network*		network_create();
-void			network_destroy(Network* net);
-size_t			network_attach_stream(Network* net, NetworkStream* stream);
-NetworkStream*	network_get_stream_type(Network* net, FourCC type);
+Network*				network_create();
+void					network_destroy(Network* net);
+size_t					network_attach_stream(Network* net, NetworkStream* stream);
+NetworkStream*			network_get_stream_type(Network* net, FourCC type);
 
-NetworkStream*	network_stream_create(FourCC type, size_t element_size, size_t count);
-void			network_stream_destroy(NetworkStream* stream);
+
+NetworkStream*			network_stream_create(FourCC type, size_t element_size, size_t count);
+void					network_stream_destroy(NetworkStream* stream);
+
+NetworkStreamLockData*	network_stream_lock(NetworkStream* stream, size_t start_element, size_t count);
+void					network_stream_unlock(NetworkStreamLockData* lock_data);
 
 #endif
