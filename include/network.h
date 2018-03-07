@@ -34,7 +34,7 @@ typedef struct
 	NetworkStream* stream;
 	size_t	count;
 	void* data;
-}NetworkStreamLockData;
+} NetworkStreamLockData;
 
 typedef struct
 {

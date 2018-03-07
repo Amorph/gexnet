@@ -10,20 +10,44 @@ typedef struct
 	size_t out;
 } in_out_counter;
 
-
-void gexnet_compute_in_out_streams(Network* network)
+size_t gexnet_compute_node_count(NetworkStream* links)
 {
-	NetworkStream* nodes = network_get_stream_type(network, FOURCC_DATA);
-	NetworkStream* links = network_get_stream_type(network, FOURCC_LINK);
+	size_t max_index = 0;
 
-	if (!nodes || !links)
+	if (!links)
+		return 0;
+	
+	NetworkStreamLockData* links_stream = network_stream_lock(links, 0, 0);
+
+	if (!links_stream || !links->elementCount)
+		return 0;
+
+	size_t left = links->elementCount;
+
+	NetworkLink* links_data = (NetworkLink*)links->data;
+	while (left--)
+	{
+		if (max_index < links_data->input)
+			max_index = links_data->input;
+		if (max_index < links_data->output)
+			max_index = links_data->output;
+		links_data++;
+	}
+
+	network_stream_unlock(links_stream);
+
+	return max_index + 1;
+}
+
+void gexnet_compute_in_out_streams(NetworkStream* links, size_t node_count, NetworkStream** inputs, NetworkStream** outputs)
+{
+	if (!node_count || !links)
 		return;
 
 	NetworkLink* links_data = (NetworkLink*)links->data;
-	size_t nodes_count = nodes->elementCount;
 
-	in_out_counter* counter = allocator_get()->allocate(sizeof(in_out_counter) * nodes_count);
-	memset(counter, 0, sizeof(in_out_counter) * nodes_count);
+	in_out_counter* counter = allocator_get()->allocate(sizeof(in_out_counter) * node_count);
+	memset(counter, 0, sizeof(in_out_counter) * node_count);
 
 	for (size_t i = 0; i < links->elementCount; i++)
 	{
@@ -32,7 +56,7 @@ void gexnet_compute_in_out_streams(Network* network)
 	}
 
 	size_t inputs_count = 0, outputs_count = 0;
-	for (size_t i = 0; i < nodes_count; i++)
+	for (size_t i = 0; i < node_count; i++)
 	{
 		if (counter[i].out && !counter[i].in)
 			inputs_count++;
@@ -46,7 +70,7 @@ void gexnet_compute_in_out_streams(Network* network)
 
 	size_t* inputs_data = inputs_steam->data;
 	size_t* outputs_data = outputs_steam->data;
-	for (size_t i = 0; i < nodes_count; i++)
+	for (size_t i = 0; i < node_count; i++)
 	{
 		if (counter[i].out && !counter[i].in)
 			inputs_data[input_idx++] = i;
@@ -56,26 +80,17 @@ void gexnet_compute_in_out_streams(Network* network)
 
 	allocator_get()->free(counter);
 
-	network_attach_stream(network, inputs_steam);
-	network_attach_stream(network, outputs_steam);
+	*outputs = outputs_steam;
+	*inputs = inputs_steam;
 }
 
-void gexnet_process_links(Network* network)
+void gexnet_process_links_weight(NetworkStream* links, NetworkStream* weight, NetworkStream* output)
 {
-	gexnet_process_links_weight(network, FOURCC_LINK_WEIGHT);
-}
-
-void gexnet_process_links_weight(Network* network, FourCC weight_stream)
-{
-	NetworkStream* nodes = network_get_stream_type(network, FOURCC_DATA);
-	NetworkStream* links = network_get_stream_type(network, FOURCC_LINK);
-	NetworkStream* weight = network_get_stream_type(network, weight_stream);
-
-	if (!nodes || !links || !weight)
+	if (!output || !links || !weight)
 		return;
 
 	NetworkLink* links_data = links->data;
-	Number* node_data = nodes->data;
+	Number* node_data = output->data;
 	Number* weight_data = weight->data;
 	for (size_t i = 0; i < links->elementCount; i++)
 	{

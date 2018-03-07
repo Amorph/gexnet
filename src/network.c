@@ -71,11 +71,14 @@ network_stream_destroy(NetworkStream* stream)
 	allocator_get()->free(stream);
 }
 
-NetworkStreamLockData* 
+NetworkStreamLockData*
 network_stream_lock(NetworkStream* stream, size_t start_element, size_t count)
 {
 	if (start_element + count > stream->elementCount)
 		return 0;
+
+	if (!count)
+		count = stream->elementCount - start_element;
 
 	NetworkStreamLockData* lock_data = allocator_get()->allocate(sizeof(NetworkStreamLockData));
 	lock_data->stream = stream;
