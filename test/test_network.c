@@ -1,9 +1,15 @@
 #include "network.h"
 #include "processors.h"
+#include "feedforward.h"
 
 void main()
 {
 	size_t neurons_connections = 2;
+
+	//0   6
+	//1 4 7 10
+	//2 5 8 11
+	//3   9
 
 	NetworkStream* links = network_stream_create(FOURCC_LINK, sizeof(NetworkLink), neurons_connections);
 	NetworkStream* inputs;
@@ -19,5 +25,6 @@ void main()
 
 	size_t node_count = gexnet_compute_node_count(links);
 
-	gexnet_compute_in_out_streams(links, node_count, &inputs, &outputs);
+	gexnet_compute_forward_propagation(links, 0, 0, 0, 0, 0, 0);
+	//gexnet_compute_in_out_streams(links, node_count, &inputs, &outputs);
 }

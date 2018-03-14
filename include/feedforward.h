@@ -4,17 +4,6 @@
 #include "types.h"
 #include "network.h"
 
-typedef struct
-{
-	Integer		layers_count;
-	Network**	layers;
-}FFNetwork;
-
-FFNetwork*		ff_network_create(Integer layers_count);
-void			ff_network_destroy(FFNetwork* network);
-
-void			ff_network_init_layer(FFNetwork* network, Integer layer, Integer nodes, Integer links);
-void			ff_network_init_fully_connected_layer(FFNetwork* network, Integer layer, Integer nodes, Integer input_layer);
-
+bool gexnet_compute_forward_propagation(NetworkStream* links, size_t node_count, NetworkStream* inputs, NetworkStream* outputs, NetworkStream** fflayers, NetworkStream** ffnodes, NetworkStream** fflinks);
 
 #endif

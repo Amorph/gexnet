@@ -16,8 +16,8 @@
 
 typedef struct
 {
-	size_t				input;
-	size_t				output;
+	size_t	input;
+	size_t	output;
 } NetworkLink;
 
 

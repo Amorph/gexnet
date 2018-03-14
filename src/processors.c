@@ -14,15 +14,17 @@ size_t gexnet_compute_node_count(NetworkStream* links)
 {
 	size_t max_index = 0;
 
-	if (!links)
+	if (!links || !links->elementCount)
 		return 0;
 	
 	NetworkStreamLockData* links_stream = network_stream_lock(links, 0, 0);
 
-	if (!links_stream || !links->elementCount)
+	if (!links_stream)
 		return 0;
 
-	size_t left = links->elementCount;
+	size_t left = links_stream->count;
+	if (!left)
+		return 0;
 
 	NetworkLink* links_data = (NetworkLink*)links->data;
 	while (left--)
@@ -41,8 +43,11 @@ size_t gexnet_compute_node_count(NetworkStream* links)
 
 void gexnet_compute_in_out_streams(NetworkStream* links, size_t node_count, NetworkStream** inputs, NetworkStream** outputs)
 {
-	if (!node_count || !links)
+	if (!links)
 		return;
+
+	if (!node_count)
+		node_count = gexnet_compute_node_count(links);
 
 	NetworkLink* links_data = (NetworkLink*)links->data;
 
@@ -65,23 +70,31 @@ void gexnet_compute_in_out_streams(NetworkStream* links, size_t node_count, Netw
 	}
 	size_t input_idx = 0, output_idx = 0;
 
-	NetworkStream* inputs_steam = network_stream_create(FOURCC_INPUTS, sizeof(size_t), inputs_count);
-	NetworkStream* outputs_steam = network_stream_create(FOURCC_OUTPUTS, sizeof(size_t), outputs_count);
+	NetworkStream* inputs_steam = 0;
+	NetworkStream* outputs_steam = 0;
 
-	size_t* inputs_data = inputs_steam->data;
-	size_t* outputs_data = outputs_steam->data;
+	if(inputs)
+		inputs_steam = network_stream_create(FOURCC_INPUTS, sizeof(size_t), inputs_count);
+	if(outputs)
+		outputs_steam = network_stream_create(FOURCC_OUTPUTS, sizeof(size_t), outputs_count);
+
+	size_t* inputs_data = inputs_steam ? inputs_steam->data : 0;
+	size_t* outputs_data = outputs_steam ? outputs_steam->data : 0;
 	for (size_t i = 0; i < node_count; i++)
 	{
-		if (counter[i].out && !counter[i].in)
+		if (inputs_data && counter[i].out && !counter[i].in)
 			inputs_data[input_idx++] = i;
-		else if (!counter[i].out && counter[i].in)
+		else if (outputs_data && !counter[i].out && counter[i].in)
 			outputs_data[output_idx++] = i;
 	}
 
 	allocator_get()->free(counter);
 
-	*outputs = outputs_steam;
-	*inputs = inputs_steam;
+	if(inputs)
+		*inputs = inputs_steam;
+
+	if(outputs)
+		*outputs = outputs_steam;
 }
 
 void gexnet_process_links_weight(NetworkStream* links, NetworkStream* weight, NetworkStream* output)
