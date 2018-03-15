@@ -123,21 +123,71 @@ bool gexnet_compute_forward_propagation(NetworkStream* links, size_t node_count,
 	FFNode** ff_layers_slots = allocator_get()->allocate(sizeof(FFNode*) * (node_count));
 
 	// init input layer
-	FFLayer* prev_layer = ff_layers;
+	FFLayer* prev_layer, *input_layer, *output_layer;
 	FFNode** last_slot = ff_layers_slots;
 
-	prev_layer->index = 0;
-	prev_layer->nodes = last_slot;
-	prev_layer->nodes_count = inputs_stream->count;
-	last_slot += prev_layer->nodes_count;
+	// Create output layer
+	output_layer = ff_layers + 0;
+	output_layer->index = 0;
+	output_layer->nodes = last_slot;
+	output_layer->nodes_count = outputs_stream->count;
+	last_slot += output_layer->nodes_count;
 
+	// Create input layer
+	input_layer = ff_layers + 1;
+	input_layer->index = 1;
+	input_layer->nodes = last_slot;
+	input_layer->nodes_count = inputs_stream->count;
+	last_slot += input_layer->nodes_count;
+
+	// Fill output layer
+	size_t* outputs_data = outputs_stream->data;
+	for (size_t i = 0; i < output_layer->nodes_count; i++)
+	{
+		FFNode* node = ff_nodes + outputs_data[i];
+
+		node->layer = output_layer;
+		output_layer->nodes[i] = node;
+	}
+	// Fill input layer
 	size_t* inputs_data = inputs_stream->data;
-	for (size_t i = 0; i < prev_layer->nodes_count; i++)
+	for (size_t i = 0; i < input_layer->nodes_count; i++)
 	{
 		FFNode* node = ff_nodes + inputs_data[i];
 
-		node->layer = prev_layer;
-		prev_layer->nodes[i] = node;
+		node->layer = input_layer;
+		input_layer->nodes[i] = node;
+	}
+	prev_layer = input_layer;
+	while (true)
+	{
+		FFLayer* current_layer = prev_layer + 1;
+		current_layer->index = prev_layer->index + 1;
+		current_layer->nodes = last_slot;
+		current_layer->nodes_count = 0;
+		for (size_t i = 0; i < prev_layer->nodes_count; i++)
+		{
+			FFNode* node = prev_layer->nodes[i];
+			for (size_t j = 0; j < node->olinks_count; j++)
+			{
+				FFNode* candidate = node->olinks[j]->onode;
+				size_t l;
+				if (candidate->layer)
+					continue; // Already added
+				for (l = 0; l < candidate->ilinks_count; l++)
+					if (!candidate->ilinks[l]->inode->layer)
+						break;
+				if (l == candidate->ilinks_count)
+				{
+					candidate->layer = current_layer;
+					current_layer->nodes[current_layer->nodes_count++] = candidate;
+				}
+			}
+		}
+		if (!current_layer->nodes_count)
+			break;
+		last_slot += current_layer->nodes_count;
+		prev_layer = current_layer;
 	}
 
 	return true;
