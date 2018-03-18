@@ -1,6 +1,7 @@
 #include "network.h"
 #include "processors.h"
 #include "feedforward.h"
+#include "graph.h"
 
 void main()
 {
@@ -30,7 +31,9 @@ void main()
 	network_stream_unlock(neuron_links);
 
 	size_t node_count = gexnet_compute_node_count(links);
+	NetworkGraph* graph = network_graph_create(links);
+	network_graph_destroy(graph);
 
-	gexnet_compute_forward_propagation(links, 0, 0, 0, 0, 0, 0);
+	//gexnet_compute_forward_propagation(links, 0, 0, 0, 0, 0, 0);
 	//gexnet_compute_in_out_streams(links, node_count, &inputs, &outputs);
 }

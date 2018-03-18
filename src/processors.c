@@ -41,10 +41,10 @@ size_t gexnet_compute_node_count(NetworkStream* links)
 	return max_index + 1;
 }
 
-void gexnet_compute_in_out_streams(NetworkStream* links, size_t node_count, NetworkStream** inputs, NetworkStream** outputs)
+bool gexnet_compute_in_out_streams(NetworkStream* links, size_t node_count, NetworkStream** inputs, NetworkStream** outputs)
 {
 	if (!links)
-		return;
+		return false;
 
 	if (!node_count)
 		node_count = gexnet_compute_node_count(links);
@@ -67,6 +67,11 @@ void gexnet_compute_in_out_streams(NetworkStream* links, size_t node_count, Netw
 			inputs_count++;
 		else if (!counter[i].out && counter[i].in)
 			outputs_count++;
+	}
+	if (!inputs_count || !outputs_count)
+	{
+		allocator_get()->free(counter);
+		return false;
 	}
 	size_t input_idx = 0, output_idx = 0;
 
@@ -95,6 +100,8 @@ void gexnet_compute_in_out_streams(NetworkStream* links, size_t node_count, Netw
 
 	if(outputs)
 		*outputs = outputs_steam;
+
+	return true;
 }
 
 void gexnet_process_links_weight(NetworkStream* links, NetworkStream* weight, NetworkStream* output)

@@ -8,12 +8,14 @@ project(gexnet)
 set(library_HEADERS
 	include/types.h
 	include/feedforward.h
+	include/graph.h
 	include/memory.h
 	include/network.h
 	include/processors.h
 )
 set(library_SOURCES
 	src/feedforward.c
+	src/graph.c
     src/network.c
     src/memory.c
 	src/processors.c
