@@ -2,6 +2,9 @@
 #include "processors.h"
 #include "feedforward.h"
 #include "graph.h"
+#include "graph_dot.h"
+
+#include <stdio.h>
 
 void main()
 {
@@ -32,6 +35,11 @@ void main()
 
 	size_t node_count = gexnet_compute_node_count(links);
 	NetworkGraph* graph = network_graph_create(links);
+	FILE* f = fopen("gexnet.gv", "wt");
+
+	network_graph_generate_dot(graph, fprintf, f);
+	fclose(f);
+
 	network_graph_destroy(graph);
 
 	//gexnet_compute_forward_propagation(links, 0, 0, 0, 0, 0, 0);

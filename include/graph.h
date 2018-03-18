@@ -46,4 +46,5 @@ typedef struct
 NetworkGraph*	network_graph_create(NetworkStream* links);
 void			network_graph_destroy(NetworkGraph* graph);
 
+
 #endif

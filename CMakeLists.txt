@@ -9,6 +9,7 @@ set(library_HEADERS
 	include/types.h
 	include/feedforward.h
 	include/graph.h
+	include/graph_dot.h
 	include/memory.h
 	include/network.h
 	include/processors.h
@@ -16,6 +17,7 @@ set(library_HEADERS
 set(library_SOURCES
 	src/feedforward.c
 	src/graph.c
+	src/graph_dot.c
     src/network.c
     src/memory.c
 	src/processors.c

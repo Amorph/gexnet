@@ -182,7 +182,11 @@ NetworkGraph*	network_graph_create(NetworkStream* links)
 	for (size_t i = 0; i < layers_count; i++)
 	{
 		NetworkGraphLayer* t_layer = layers_final + i;
-		NetworkGraphLayer* s_layer = ff_layers + i;
+		NetworkGraphLayer* s_layer = ff_layers + (i+1);
+		// remap inputs-hidden-output
+		if(i == layers_count - 1)
+			s_layer = ff_layers + 0;
+
 		t_layer->index = s_layer->index;
 		t_layer->nodes = s_layer->nodes;
 		t_layer->nodes_count = s_layer->nodes_count;
