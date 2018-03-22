@@ -6,6 +6,7 @@ project(gexnet)
 
 # Source files to be used in the library
 set(library_HEADERS
+	include/builder.h
 	include/types.h
 	include/feedforward.h
 	include/graph.h
@@ -15,6 +16,7 @@ set(library_HEADERS
 	include/processors.h
 )
 set(library_SOURCES
+	src/builder.c
 	src/feedforward.c
 	src/graph.c
 	src/graph_dot.c
