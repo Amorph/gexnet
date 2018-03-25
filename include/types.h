@@ -10,6 +10,11 @@ typedef long		Integer;
 typedef short		Activation_func;
 typedef uint32_t	FourCC;
 
+typedef struct XYZIntVector
+{
+	Integer x, y, z;
+}XYZIntVector;
+
 typedef struct
 {
 	void* (*allocate)(size_t size);

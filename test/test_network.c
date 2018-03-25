@@ -3,8 +3,13 @@
 #include "feedforward.h"
 #include "graph.h"
 #include "graph_dot.h"
+#include "builder.h"
 
 #include <stdio.h>
+
+void test_builder()
+{
+}
 
 void main()
 {
@@ -18,6 +23,7 @@ void main()
 	//0   4
 	//1 3 
 	//2   5
+	test_builder();
 
 	NetworkStream* links = network_stream_create(FOURCC_LINK, sizeof(NetworkLink), neurons_connections);
 	NetworkStream* inputs;
