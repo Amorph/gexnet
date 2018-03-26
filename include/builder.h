@@ -3,49 +3,6 @@
 
 #include "types.h"
 
-#define LAYER_INPUT (0)
-#define LAYER_DUP	(1)
-#define LAYER_CONV	(2)
-#define LAYER_MUL	(3)
-#define LAYER_ADD	(4)
-
-typedef struct BaseLayer
-{
-	size_t			type;
-	XYZIntVector	in;
-	XYZIntVector	out;
-	size_t*			inputs;
-	size_t*			outputs;
-}BaseLayer;
-
-struct NetworkBuilder
-{
-	BaseLayer**	layers;
-	size_t		layers_count;
-}NetworkBuilder;
-
-typedef void(*LayerInitDataGet)(struct LayerInitDataProvider* obj, XYZIntVector index);
-typedef void(*LayerInitDataProvider)(void* obj, XYZIntVector index);
-
-struct LayerInitDataProvider
-{
-	LayerInitDataGet getter;
-};
-
-BaseLayer*	layer_linear_input(XYZIntVector dim);
-BaseLayer*	layer_duplicate(BaseLayer* input, XYZIntVector mult);
-BaseLayer*	layer_convolution(BaseLayer* input, XYZIntVector kernel, XYZIntVector padding, XYZIntVector stride, LayerInitDataProvider* filter_weights);
-// Identical to:
-
-/*BaseLayer*	layer_full_connection(BaseLayer* input, XYZIntVector size, LayerInitDataProvider* weights, LayerInitDataProvider* biases);
-BaseLayer*	layer_join(BaseLayer* a, BaseLayer* b);
-BaseLayer*	layer_mul(BaseLayer* input, LayerInitDataProvider* data);
-BaseLayer*	layer_add(BaseLayer* input, LayerInitDataProvider* data);*/
-// TODO activation layer ?
-
-// input = layer_linear_input(10);
-// hidden = layer_full_connection(input, 15, weights, biases);
-// output = layer_full_connection(hidden, 3, weights, biases);
 
 //convolution output size calculation:
 // OutSize = (SourceSize + 2 * Padding - FilterSize) / Stride + 1 
@@ -61,13 +18,80 @@ BaseLayer*	layer_add(BaseLayer* input, LayerInitDataProvider* data);*/
 // Each formula can use variables that comes with DataProvider. DataProvider can be setted by default and can be overrided by layer.
 // Also formula can use constants with float type
 // Possible usage example:
-// network_builder* bld = network_create_builder() 
-// size_t weights = bld->create_link_data(bld, TYPE_NUMBER, uniform_generator);
-// size_t bias = bld->create_node_data(bld, TYPE_NUMBER, uniform_generator);
-// size_t input_node_value = bld->input_node->value;
-// size_t link_value = bld->input_link->value;
-// builder_link_processor* link_processor = builder->create_link_processor(builder, bld->op->mul(input_node_value, weights));
-// builder_node_processor* node_processor = builder->create_node_processor(builder, bld->func->tanh(bld->op->add(bld->op->sum(link_value), bias));
+// struct NetworkBuilder* bld = network_create_builder() 
+// size_t weights = bld->primitives->create_link_data(bld, TYPE_NUMBER, uniform_generator);
+// size_t bias = bld->primitives->create_node_data(bld, TYPE_NUMBER, uniform_generator);
+// size_t input_node_value = bld->primitives->input_node.value;
+// size_t link_value = bld->primitives->input_link.value;
+// builder_link_processor* link_processor = builder->create_link_processor(builder, bld->op->sum(bld->op->mul(input_node_value, weights)));
+// builder_node_processor* node_processor = builder->create_node_processor(builder, bld->func->tanh(bld->op->add(link_value, bias));
 // 
 // Link generation TODO
+
+typedef void(*LayerInitDataGet)(struct LayerInitDataProvider* obj, XYZIntVector index);
+typedef void(*LayerInitDataProvider)(void* obj, XYZIntVector index);
+
+typedef	size_t BuilderLinkAggregator;
+typedef	size_t BuilderOperand;
+
+struct LayerInitDataProvider
+{
+	LayerInitDataGet getter;
+};
+
+
+struct BuilderLayer;
+struct BuilderLinkData;
+
+enum BuilderDataType
+{
+	NUMBER,
+	INTEGER
+};
+
+struct NetworkBuilder
+{
+	void (*destroy)(struct NetworkBuilder* builder);
+	struct _BuilderPrimitivesIntefrace
+	{
+		struct BuilderLayer*	(*create_input)(struct NetworkBuilder* builder, XYZIntVector size);
+		BuilderOperand			(*create_link_data)(struct NetworkBuilder* builder, enum BuilderDataType data_type, LayerInitDataProvider* data_provider);
+		BuilderOperand			(*create_node_data)(struct NetworkBuilder* builder, enum BuilderDataType data_type, LayerInitDataProvider* data_provider);
+		BuilderOperand			(*create_constant)(struct NetworkBuilder* builder, Number value);
+		struct
+		{
+			BuilderOperand value;
+		}input_node;
+		struct
+		{
+			BuilderOperand value;
+		}input_link;
+	}*primitives;
+
+	struct _BuilderLinkAggregationsIntefrace
+	{
+		BuilderLinkAggregator(*sum)(struct NetworkBuilder* builder, BuilderOperand input);
+		BuilderLinkAggregator(*min)(struct NetworkBuilder* builder, BuilderOperand input);
+		BuilderLinkAggregator(*avg)(struct NetworkBuilder* builder, BuilderOperand input);
+		BuilderLinkAggregator(*max)(struct NetworkBuilder* builder, BuilderOperand input);
+	}*links_aggregation;
+
+	struct _BuilderOperationsInterface
+	{
+		BuilderOperand(*add)(struct NetworkBuilder* builder, BuilderOperand a, BuilderOperand b);
+		BuilderOperand(*mul)(struct NetworkBuilder* builder, BuilderOperand a, BuilderOperand b);
+		BuilderOperand(*sub)(struct NetworkBuilder* builder, BuilderOperand a, BuilderOperand b);
+	}*op;
+
+	struct _BuilderFunctionsInterface
+	{
+		BuilderOperand(*tahn)	(struct NetworkBuilder* builder, BuilderOperand x);
+		BuilderOperand(*relu)	(struct NetworkBuilder* builder, BuilderOperand x);
+		BuilderOperand(*sigmoid)(struct NetworkBuilder* builder, BuilderOperand x);
+		BuilderOperand(*sign)	(struct NetworkBuilder* builder, BuilderOperand x);
+	}*func;
+};
+
+struct NetworkBuilder*	network_create_builder();
+
 #endif

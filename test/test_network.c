@@ -7,8 +7,15 @@
 
 #include <stdio.h>
 
+XYZIntVector net_input_dim = { 3, 1, 1 };
+
 void test_builder()
 {
+	struct NetworkBuilder* bld = network_create_builder();
+	
+	struct BuilderLayer* input_layer = bld->primitives->create_input(bld, net_input_dim);
+
+	bld->destroy(bld);
 }
 
 void main()
