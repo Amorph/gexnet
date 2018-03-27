@@ -9,8 +9,6 @@ struct NetworkBuilderImpl
 	struct NetworkBuilder pub;
 };
 
-void init_public_interface(struct NetworkBuilderImpl* builder);
-
 static void 
 builder_destroy(struct NetworkBuilder* builder)
 {
@@ -18,25 +16,42 @@ builder_destroy(struct NetworkBuilder* builder)
 }
 
 static struct BuilderLayer* 
-primitives_create_input(struct NetworkBuilder* builder, XYZIntVector size)
+network_create_layer(struct NetworkBuilder* builder, XYZIntVector size, BuilderNodeValueCompute compute)
+{
+	return NULL;
+}
+
+static struct BuilderLayer*
+network_create_input_layer(struct NetworkBuilder* builder, XYZIntVector size)
 {
 	return NULL;
 }
 
 static BuilderOperand
-primitives_create_link_data(struct NetworkBuilder* builder, enum BuilderDataType data_type, LayerInitDataProvider* data_provider)
+network_create_link_data(struct NetworkBuilder* builder, enum BuilderDataType data_type, LayerInitDataProvider* data_provider)
 {
 	return -1;
 }
 
 static BuilderOperand
-primitives_create_node_data(struct NetworkBuilder* builder, enum BuilderDataType data_type, LayerInitDataProvider* data_provider)
+network_create_node_data(struct NetworkBuilder* builder, enum BuilderDataType data_type, LayerInitDataProvider* data_provider)
 {
 	return -1;
 }
 
 static BuilderOperand
-primitives_create_constant(struct NetworkBuilder* builder, Number value)
+network_create_constant(struct NetworkBuilder* builder, Number value)
+{
+	return -1;
+}
+
+static Network* 
+network_compile(struct NetworkBuilder* builder)
+{
+	return NULL;
+}
+static BuilderNodeValueCompute
+network_compile_node(struct NetworkBuilder* builder, BuilderLinkAggregator link_function, BuilderOperand node_function)
 {
 	return -1;
 }
@@ -114,14 +129,22 @@ aggregations_interface = {
 	.avg = links_aggregation_avg,
 	.max = links_aggregation_max};
 
-static struct _BuilderPrimitivesIntefrace 
-primitives_interface = {
-	.create_input = primitives_create_input,
-	.create_link_data = primitives_create_link_data,
-	.create_node_data = primitives_create_node_data,
-	.create_constant = primitives_create_constant,
-	.input_node = {.value = INPUT_NODE_VALUE },
-	.input_link = {.value = INPUT_LINK_VALUE }
+static struct _BuilderNetworkIntefrace
+network_interface = {
+	.create_layer = network_create_layer,
+	.create_input_layer = network_create_input_layer,
+	.create_link_data = network_create_link_data,
+	.create_node_data = network_create_node_data,
+	.create_constant = network_create_constant,
+	.compile = network_compile,
+	.compile_node = network_compile_node
+};
+
+static struct _BuilderValuesInterface
+values_interface = {
+	.last_layer = NULL,
+	.input_node = { .value = INPUT_NODE_VALUE },
+	.input_link = { .value = INPUT_LINK_VALUE }
 };
 
 static struct _BuilderOperationsInterface
@@ -147,7 +170,8 @@ struct NetworkBuilder*
 	builder->pub.destroy = builder_destroy;
 
 	builder->pub.links_aggregation = &aggregations_interface;
-	builder->pub.primitives = &primitives_interface;
+	builder->pub.network = &network_interface;
+	builder->pub.values = &values_interface;
 	builder->pub.op = &operations_interface;
 	builder->pub.func = &functions_interface;
 	

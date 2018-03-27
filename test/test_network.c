@@ -8,12 +8,25 @@
 #include <stdio.h>
 
 XYZIntVector net_input_dim = { 3, 1, 1 };
+XYZIntVector net_output_dim = { 2, 1, 1 };
 
 void test_builder()
 {
 	struct NetworkBuilder* bld = network_create_builder();
-	
-	struct BuilderLayer* input_layer = bld->primitives->create_input(bld, net_input_dim);
+
+	BuilderOperand weights = bld->network->create_link_data(bld, NUMBER, NULL);
+	BuilderOperand bias = bld->network->create_node_data(bld, NUMBER, NULL);
+
+	BuilderLinkAggregator link_compute = bld->links_aggregation->sum(bld, bld->op->mul(bld, bld->values->input_node.value, weights));
+	BuilderLinkAggregator node_value_compute = bld->func->sigmoid(bld, bld->op->add(bld, bld->values->input_link.value, bias));
+	BuilderNodeValueCompute node_compute = bld->network->compile_node(bld, link_compute, node_value_compute);
+
+	struct BuilderLayer* input_layer = bld->network->create_input_layer(bld, net_input_dim);
+	struct BuilderLayer* output_layer = bld->network->create_layer(bld, net_output_dim, node_compute);
+
+	bld->network->full_connection(bld, input_layer, output_layer);
+
+	Network* net = bld->network->compile(bld);
 
 	bld->destroy(bld);
 }

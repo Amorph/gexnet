@@ -2,6 +2,7 @@
 #define __GEXNET_BUILDER_H__
 
 #include "types.h"
+#include "network.h"
 
 
 //convolution output size calculation:
@@ -33,6 +34,7 @@ typedef void(*LayerInitDataProvider)(void* obj, XYZIntVector index);
 
 typedef	size_t BuilderLinkAggregator;
 typedef	size_t BuilderOperand;
+typedef size_t BuilderNodeValueCompute;
 
 struct LayerInitDataProvider
 {
@@ -52,12 +54,21 @@ enum BuilderDataType
 struct NetworkBuilder
 {
 	void (*destroy)(struct NetworkBuilder* builder);
-	struct _BuilderPrimitivesIntefrace
+	struct _BuilderNetworkIntefrace
 	{
-		struct BuilderLayer*	(*create_input)(struct NetworkBuilder* builder, XYZIntVector size);
-		BuilderOperand			(*create_link_data)(struct NetworkBuilder* builder, enum BuilderDataType data_type, LayerInitDataProvider* data_provider);
-		BuilderOperand			(*create_node_data)(struct NetworkBuilder* builder, enum BuilderDataType data_type, LayerInitDataProvider* data_provider);
-		BuilderOperand			(*create_constant)(struct NetworkBuilder* builder, Number value);
+		struct BuilderLayer*	(*create_layer)			(struct NetworkBuilder* builder, XYZIntVector size, BuilderNodeValueCompute compute);
+		struct BuilderLayer*	(*create_input_layer)	(struct NetworkBuilder* builder, XYZIntVector size);
+		void					(*full_connection)		(struct NetworkBuilder* builder, struct BuilderLayer* input, struct BuilderLayer* layer);
+		BuilderOperand			(*create_link_data)		(struct NetworkBuilder* builder, enum BuilderDataType data_type, LayerInitDataProvider* data_provider);
+		BuilderOperand			(*create_node_data)		(struct NetworkBuilder* builder, enum BuilderDataType data_type, LayerInitDataProvider* data_provider);
+		BuilderOperand			(*create_constant)		(struct NetworkBuilder* builder, Number value);
+		Network*				(*compile)				(struct NetworkBuilder* builder);
+		BuilderNodeValueCompute	(*compile_node)			(struct NetworkBuilder* builder, BuilderLinkAggregator link_function, BuilderOperand node_function);
+	}*network;
+
+	struct _BuilderValuesInterface
+	{
+		struct BuilderLayer* last_layer;
 		struct
 		{
 			BuilderOperand value;
@@ -66,7 +77,7 @@ struct NetworkBuilder
 		{
 			BuilderOperand value;
 		}input_link;
-	}*primitives;
+	}*values;
 
 	struct _BuilderLinkAggregationsIntefrace
 	{
