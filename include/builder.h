@@ -59,9 +59,9 @@ struct NetworkBuilder
 		struct BuilderLayer*	(*create_layer)			(struct NetworkBuilder* builder, XYZIntVector size, BuilderNodeValueCompute compute);
 		struct BuilderLayer*	(*create_input_layer)	(struct NetworkBuilder* builder, XYZIntVector size);
 		void					(*full_connection)		(struct NetworkBuilder* builder, struct BuilderLayer* input, struct BuilderLayer* layer);
-		BuilderOperand			(*create_link_data)		(struct NetworkBuilder* builder, enum BuilderDataType data_type, LayerInitDataProvider* data_provider);
-		BuilderOperand			(*create_node_data)		(struct NetworkBuilder* builder, enum BuilderDataType data_type, LayerInitDataProvider* data_provider);
-		BuilderOperand			(*create_constant)		(struct NetworkBuilder* builder, Number value);
+		BuilderOperand			(*create_link_data)		(struct NetworkBuilder* builder, const char* name, enum BuilderDataType data_type, LayerInitDataProvider* data_provider);
+		BuilderOperand			(*create_node_data)		(struct NetworkBuilder* builder, const char* name, enum BuilderDataType data_type, LayerInitDataProvider* data_provider);
+		BuilderOperand			(*create_constant)		(struct NetworkBuilder* builder, const char* name, Number value);
 		Network*				(*compile)				(struct NetworkBuilder* builder);
 		BuilderNodeValueCompute	(*compile_node)			(struct NetworkBuilder* builder, BuilderLinkAggregator link_function, BuilderOperand node_function);
 	}*network;

@@ -4,9 +4,34 @@
 #define INPUT_NODE_VALUE (0) // TODO
 #define INPUT_LINK_VALUE (0) // TODO
 
+enum _PrimitiveType
+{
+	PT_LAYER,
+	PT_NODE_COMPLETE_COMPUTE,
+	PT_NODE_LINKS_AGGREGATOR,
+	PT_NODE_FUNCTION,
+	PT_DATA_CONSTANT,
+	PT_DATA_LINK,
+	PT_DATA_NODE,
+	PT_LINK_ARRAY,
+};
+
+enum _LayerType
+{
+	LT_INPUT_LAYER = 0,
+	LT_COMPUTE_LAYER = 1,
+};
+
 struct NetworkBuilderImpl
 {
 	struct NetworkBuilder pub;
+};
+
+struct BuilderLayer
+{
+	enum _LayerType			type;
+	XYZIntVector			size;
+	BuilderNodeValueCompute	compute;
 };
 
 static void 
@@ -18,29 +43,40 @@ builder_destroy(struct NetworkBuilder* builder)
 static struct BuilderLayer* 
 network_create_layer(struct NetworkBuilder* builder, XYZIntVector size, BuilderNodeValueCompute compute)
 {
-	return NULL;
+	struct BuilderLayer* layer = allocator_get()->allocate(sizeof(struct BuilderLayer));
+
+	layer->type = LT_COMPUTE_LAYER;
+	layer->size = size;
+	layer->compute = compute;
+	return layer;
 }
 
 static struct BuilderLayer*
 network_create_input_layer(struct NetworkBuilder* builder, XYZIntVector size)
 {
-	return NULL;
+	struct BuilderLayer* layer = allocator_get()->allocate(sizeof(struct BuilderLayer));
+
+	layer->type = LT_INPUT_LAYER;
+	layer->size = size;
+	layer->compute = 0;
+
+	return layer;
 }
 
 static BuilderOperand
-network_create_link_data(struct NetworkBuilder* builder, enum BuilderDataType data_type, LayerInitDataProvider* data_provider)
+network_create_link_data(struct NetworkBuilder* builder, const char* name, enum BuilderDataType data_type, LayerInitDataProvider* data_provider)
 {
 	return -1;
 }
 
 static BuilderOperand
-network_create_node_data(struct NetworkBuilder* builder, enum BuilderDataType data_type, LayerInitDataProvider* data_provider)
+network_create_node_data(struct NetworkBuilder* builder, const char* name, enum BuilderDataType data_type, LayerInitDataProvider* data_provider)
 {
 	return -1;
 }
 
 static BuilderOperand
-network_create_constant(struct NetworkBuilder* builder, Number value)
+network_create_constant(struct NetworkBuilder* builder, const char* name, Number value)
 {
 	return -1;
 }

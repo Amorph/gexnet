@@ -161,7 +161,8 @@ NetworkGraph*	network_graph_create(NetworkStream* links)
 				if (candidate->layer != NETWORK_GRAPH_ORPHANED)
 					continue; // Already added
 				for (l = 0; l < candidate->ilinks_count; l++)
-					if (candidate->ilinks[l]->inode->layer == NETWORK_GRAPH_ORPHANED)
+					if (candidate->ilinks[l]->inode != candidate && 
+						candidate->ilinks[l]->inode->layer == NETWORK_GRAPH_ORPHANED)
 						break;
 				if (l == candidate->ilinks_count)
 				{
