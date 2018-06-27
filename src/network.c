@@ -71,6 +71,14 @@ network_stream_destroy(NetworkStream* stream)
 	allocator_get()->free(stream);
 }
 
+void network_stream_clear(NetworkStream* stream)
+{
+	NetworkStreamLockData* lock = network_stream_lock(stream, 0, 0);
+	memset(lock->data, 0, stream->elementSize * lock->count);
+	network_stream_unlock(lock);
+}
+
+
 NetworkStreamLockData*
 network_stream_lock(NetworkStream* stream, size_t start_element, size_t count)
 {

@@ -6,6 +6,7 @@
 #include "builder.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 XYZIntVector net_input_dim = { 3, 1, 1 };
 XYZIntVector net_output_dim = { 2, 1, 1 };
@@ -31,12 +32,17 @@ void test_builder()
 	bld->destroy(bld);
 }
 
-void spinking_nn()
+NetworkStream* create_links_stream(NetworkLink links[], size_t count)
 {
-	// links
-	// links weights
-	// node data
-	// prev frame node data
+	NetworkStream* stream = network_stream_create(FOURCC_LINK, sizeof(NetworkLink), count);
+
+	NetworkStreamLockData* neuron_links = network_stream_lock(stream, 0, count);
+	NetworkLink* link_data = neuron_links->data;
+	for (size_t i = 0; i < count; i++)
+		link_data[i] = links[i];
+
+	network_stream_unlock(neuron_links);
+	return stream;
 }
 
 void main()
@@ -52,23 +58,38 @@ void main()
 	//1 3 
 	//2   5
 	//test_builder();
+	NetworkLink raw_links[] = {
+		{ 0, 3 },
+		{ 1, 3 },
+		{ 2, 3 },
+		{ 3, 3 },
+		{ 3, 4 },
+		{ 3, 5 },
+		{ 5, 6 },
+		{ 4, 6 },
+		{ 3, 6 }
+	};
+	size_t num_links = sizeof(raw_links) / sizeof(NetworkLink);
+	NetworkStream* links = create_links_stream(raw_links, num_links);
 
-	NetworkStream* links = network_stream_create(FOURCC_LINK, sizeof(NetworkLink), neurons_connections);
-	NetworkStream* inputs;
-	NetworkStream* outputs;
-
-	NetworkStreamLockData* neuron_links = network_stream_lock(links, 0, neurons_connections);
-	NetworkLink* link_data = neuron_links->data;
-	link_data[0].input = 0;	link_data[0].output = 3;
-	link_data[1].input = 1;	link_data[1].output = 3;
-	link_data[2].input = 2;	link_data[2].output = 3;
-	link_data[3].input = 3;	link_data[3].output = 4;
-	link_data[4].input = 3;	link_data[4].output = 3;
-	link_data[5].input = 3;	link_data[5].output = 5;
-
-	network_stream_unlock(neuron_links);
-
+	// create weights
+	NetworkStream* weights_stream = network_stream_create(FOURCC_LINK_WEIGHT, sizeof(Number), num_links);
+	NetworkStreamLockData* weights_lock = network_stream_lock(weights_stream, 0, num_links);
+	Number* weigths_data = weights_lock->data;
+	for (size_t i = 0; i < num_links; i++)
+	{
+		weigths_data[i] = rand() / (float)RAND_MAX * 2.f - 1.f;
+	}
+	network_stream_unlock(weights_lock);
+	// create data layers
 	size_t node_count = gexnet_compute_node_count(links);
+	NetworkStream* data_stream = network_stream_create(FOURCC_DATA, sizeof(Number), node_count);
+	network_stream_clear(data_stream);
+	// calculate weigths
+	// process weights - activation func
+
+	// backpropagation experiments?
+
 	NetworkGraph* graph = network_graph_create(links);
 	FILE* f = fopen("gexnet.gv", "wt");
 

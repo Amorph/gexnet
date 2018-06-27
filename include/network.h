@@ -51,6 +51,7 @@ NetworkStream*			network_get_stream_type(Network* net, FourCC type);
 
 NetworkStream*			network_stream_create(FourCC type, size_t element_size, size_t count);
 void					network_stream_destroy(NetworkStream* stream);
+void					network_stream_clear(NetworkStream* stream);
 
 NetworkStreamLockData*	network_stream_lock(NetworkStream* stream, size_t start_element, size_t count);
 void					network_stream_unlock(NetworkStreamLockData* lock_data);
