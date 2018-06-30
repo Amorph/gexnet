@@ -101,3 +101,37 @@ network_stream_unlock(NetworkStreamLockData* lock_data)
 {
 	allocator_get()->free(lock_data);
 }
+
+void network_stream_set_indexed(NetworkStream* stream, NetworkStream* indexes, void* data, size_t start_index, size_t element_count)
+{
+	NetworkStreamLockData* target_lck = network_stream_lock(stream, 0, 0);
+	NetworkStreamLockData* indexes_lck = network_stream_lock(indexes, start_index, element_count);
+
+	size_t* indexes_data = indexes_lck->data;
+	size_t	data_element_size = stream->elementSize;
+	uint8_t* src_data = data;
+	uint8_t* dst_data = target_lck->data;
+
+	for (size_t i = 0; i < element_count; i++)
+		memcpy(dst_data + indexes_data[i] * data_element_size, src_data + i * data_element_size, data_element_size);
+
+	network_stream_unlock(indexes_lck);
+	network_stream_unlock(target_lck);
+}
+
+void network_stream_get_indexed(NetworkStream* stream, NetworkStream* indexes, void* data, size_t start_index, size_t element_count)
+{
+	NetworkStreamLockData* target_lck = network_stream_lock(stream, 0, 0);
+	NetworkStreamLockData* indexes_lck = network_stream_lock(indexes, start_index, element_count);
+
+	size_t* indexes_data = indexes_lck->data;
+	size_t	data_element_size = stream->elementSize;
+	uint8_t* src_data = data;
+	uint8_t* dst_data = target_lck->data;
+
+	for (size_t i = 0; i < element_count; i++)
+		memcpy(src_data + i * data_element_size, dst_data + indexes_data[i] * data_element_size, data_element_size);
+
+	network_stream_unlock(indexes_lck);
+	network_stream_unlock(target_lck);
+}

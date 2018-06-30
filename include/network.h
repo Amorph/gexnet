@@ -56,4 +56,7 @@ void					network_stream_clear(NetworkStream* stream);
 NetworkStreamLockData*	network_stream_lock(NetworkStream* stream, size_t start_element, size_t count);
 void					network_stream_unlock(NetworkStreamLockData* lock_data);
 
+void					network_stream_set_indexed(NetworkStream* stream, NetworkStream* indexes, void* data, size_t start_index, size_t element_count);
+void					network_stream_get_indexed(NetworkStream* stream, NetworkStream* indexes, void* data, size_t start_index, size_t element_count);
+
 #endif

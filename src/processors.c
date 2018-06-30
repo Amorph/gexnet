@@ -103,7 +103,19 @@ bool gexnet_compute_in_out_streams(NetworkStream* links, size_t node_count, Netw
 
 	return true;
 }
-
+void gexnet_process_node_sum_weighted_links(NetworkStream* nodes, NetworkStream* links, NetworkStream* weights, NetworkStream* prev_nodes)
+{
+	NetworkLink* links_data = links->data;
+	Number* node_data = nodes->data;
+	Number* prev_node_data = prev_nodes->data;
+	Number* weight_data = weights->data;
+	for (size_t i = 0; i < links->elementCount; i++)
+	{
+		size_t in = links_data[i].input;
+		size_t out = links_data[i].output;
+		node_data[out] += prev_node_data[in] * weight_data[i];
+	}
+}
 void gexnet_process_links_weight(NetworkStream* links, NetworkStream* weight, NetworkStream* output)
 {
 	if (!output || !links || !weight)
