@@ -2,6 +2,7 @@
 #include "memory.h"
 
 #include <string.h>
+#include <math.h>
 
 
 typedef struct
@@ -103,6 +104,21 @@ bool gexnet_compute_in_out_streams(NetworkStream* links, size_t node_count, Netw
 
 	return true;
 }
+
+Number _processing_func_tanh(Number x)
+{
+	return (Number)((exp(2 * x) - 1) / (exp(2 * x) + 1));
+}
+
+void gexnet_process_nodes(NetworkStream* input_nodes, NetworkStream* out_nodes, size_t function)
+{
+	// Only tanh now supported
+	Number* src_data = input_nodes->data;
+	Number* dst_data = out_nodes->data;
+	for (size_t i = 0; i < input_nodes->elementCount; i++)
+		dst_data[i] = _processing_func_tanh(src_data[i]);
+}
+
 void gexnet_process_node_sum_weighted_links(NetworkStream* nodes, NetworkStream* links, NetworkStream* weights, NetworkStream* prev_nodes)
 {
 	NetworkLink* links_data = links->data;

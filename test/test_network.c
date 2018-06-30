@@ -71,6 +71,10 @@ void main()
 	};
 	size_t num_links = sizeof(raw_links) / sizeof(NetworkLink);
 	NetworkStream* links = create_links_stream(raw_links, num_links);
+	size_t node_count = gexnet_compute_node_count(links);
+
+	NetworkStream* inputs, *outputs;
+	gexnet_compute_in_out_streams(links, node_count, &inputs, &outputs);
 
 	// create weights
 	NetworkStream* weights_stream = network_stream_create(FOURCC_LINK_WEIGHT, sizeof(Number), num_links);
@@ -81,13 +85,24 @@ void main()
 		weigths_data[i] = rand() / (float)RAND_MAX * 2.f - 1.f;
 	}
 	network_stream_unlock(weights_lock);
-	// create data layers
-	size_t node_count = gexnet_compute_node_count(links);
-	NetworkStream* data_stream = network_stream_create(FOURCC_DATA, sizeof(Number), node_count);
-	network_stream_clear(data_stream);
-	// calculate weigths
-	// process weights - activation func
 
+	// create data layers
+	NetworkStream* data_stream0 = network_stream_create(FOURCC_DATA, sizeof(Number), node_count);
+	NetworkStream* data_stream1 = network_stream_create(FOURCC_DATA, sizeof(Number), node_count);
+	network_stream_clear(data_stream0);
+	network_stream_clear(data_stream1);
+	float in_data[] = { 1.f, 1.f, 1.f };
+	network_stream_set_indexed(data_stream0, inputs, in_data, 0, 3);
+
+	// calculate weigths
+	network_stream_clear(data_stream1);
+	gexnet_process_node_sum_weighted_links(data_stream1, links, weights_stream, data_stream0);
+	gexnet_process_nodes(data_stream1, data_stream1, GEXNET_FUNCTION_TANH);
+	network_stream_clear(data_stream0);
+	gexnet_process_node_sum_weighted_links(data_stream0, links, weights_stream, data_stream1);
+	gexnet_process_nodes(data_stream0, data_stream0, GEXNET_FUNCTION_TANH);
+	// process weights - activation func
+	
 	// backpropagation experiments?
 
 	NetworkGraph* graph = network_graph_create(links);
