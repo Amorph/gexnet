@@ -3,6 +3,8 @@
 
 #include "types.h"
 
+
+
 struct GNStreamLockData
 {
 	void(*unlock)	(struct GNStreamLockData* lck);
@@ -11,15 +13,14 @@ struct GNStreamLockData
 	GNIndex			count;
 };
 
-struct GNStreamInterface
-{
-	void						(*destroy)	(struct GNStream* stream);
-	struct GNStreamLockData*	(*lock)		(struct GNStream* stream, GNIndex start, GNIndex count);
-};
 
 struct GNStream
 {
-	struct GNStreamInterface* i;
+	struct _GNStreamInterface
+	{
+		void						(*destroy)	(struct GNStream* stream);
+		struct GNStreamLockData*	(*lock)		(struct GNStream* stream, GNIndex start, GNIndex count, size_t flags);
+	}*i;
 
 	GNType	type;
 	GNIndex	count;

@@ -4,6 +4,7 @@
 #include "graph.h"
 #include "graph_dot.h"
 #include "builder.h"
+#include "gexnet.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,8 +46,18 @@ NetworkStream* create_links_stream(NetworkLink links[], size_t count)
 	return stream;
 }
 
+void test_new_interface()
+{
+	struct GNSystem* gs = gexnet_native_init(NULL);
+	struct GNStream* links = gs->create_stream(gs, GN_TYPE_LINK, 6, NULL);
+
+	gs->destroy(gs);
+
+}
+
 void main()
 {
+	test_new_interface();
 	size_t neurons_connections = 6;
 
 	//0   6

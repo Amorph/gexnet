@@ -9,6 +9,7 @@ set(library_HEADERS
 	include/builder.h
 	include/types.h
 	include/feedforward.h
+	include/gexnet.h
 	include/graph.h
 	include/graph_dot.h
 	include/memory.h
@@ -19,12 +20,12 @@ set(library_HEADERS
 set(library_SOURCES
 	src/builder.c
 	src/feedforward.c
+	src/gexnet_native.c
 	src/graph.c
 	src/graph_dot.c
 	src/network.c
 	src/memory.c
 	src/processors.c
-	src/stream.c
 )
 
 add_library(gexnet STATIC ${library_SOURCES} ${library_HEADERS})
