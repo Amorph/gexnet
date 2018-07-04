@@ -53,9 +53,8 @@ void test_new_interface()
 	struct GNSystem* G = gexnet_native_init(NULL);
 	struct GNStream* links = G->create_stream(G, GN_TYPE_LINK, 6, NULL);
 
-	links->destroy(links);
+	G->stream->destroy(links);
 	G->destroy(G);
-
 }
 
 void main()
