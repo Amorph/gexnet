@@ -35,18 +35,6 @@ void test_builder()
 	bld->destroy(bld);
 }
 
-NetworkStream* create_links_stream(NetworkLink links[], size_t count)
-{
-	NetworkStream* stream = network_stream_create(FOURCC_LINK, sizeof(NetworkLink), count);
-
-	NetworkStreamLockData* neuron_links = network_stream_lock(stream, 0, count);
-	NetworkLink* link_data = neuron_links->data;
-	for (size_t i = 0; i < count; i++)
-		link_data[i] = links[i];
-
-	network_stream_unlock(neuron_links);
-	return stream;
-}
 
 void test_new_interface()
 {
@@ -59,6 +47,8 @@ void test_new_interface()
 
 void main()
 {
+	struct GNSystem* G = gexnet_native_init(NULL);
+
 	test_new_interface();
 	size_t neurons_connections = 6;
 
@@ -83,37 +73,42 @@ void main()
 		{ 3, 6 }
 	};
 	size_t num_links = sizeof(raw_links) / sizeof(NetworkLink);
-	NetworkStream* links = create_links_stream(raw_links, num_links);
-	size_t node_count = gexnet_compute_node_count(links);
+	struct GNStream* links = G->create_stream(G, GN_TYPE_LINK, num_links, raw_links); 
+	size_t node_count = G->compute->node_count(links);
 
-	NetworkStream* inputs, *outputs;
-	gexnet_compute_in_out_streams(links, node_count, &inputs, &outputs);
+	struct GNStream* inputs, *outputs;
+	G->compute->in_out(links, node_count, &inputs, &outputs);
 
 	// create weights
-	NetworkStream* weights_stream = network_stream_create(FOURCC_LINK_WEIGHT, sizeof(Number), num_links);
-	NetworkStreamLockData* weights_lock = network_stream_lock(weights_stream, 0, num_links);
+	struct GNStream* weights_stream = G->create_stream(G, GN_TYPE_FLOAT, num_links, NULL);
+	struct GNStreamLockData* weights_lock = G->stream->lock(weights_stream, 0, num_links, 0);
 	Number* weigths_data = weights_lock->data;
 	for (size_t i = 0; i < num_links; i++)
 	{
 		weigths_data[i] = rand() / (float)RAND_MAX * 2.f - 1.f;
 	}
-	network_stream_unlock(weights_lock);
-
+	G->stream->unlock(weights_lock);
+	
 	// create data layers
-	NetworkStream* data_stream0 = network_stream_create(FOURCC_DATA, sizeof(Number), node_count);
-	NetworkStream* data_stream1 = network_stream_create(FOURCC_DATA, sizeof(Number), node_count);
-	network_stream_clear(data_stream0);
-	network_stream_clear(data_stream1);
+	struct GNStream* data_stream0 = G->create_stream(G, GN_TYPE_FLOAT, node_count, NULL);
+	struct GNStream* data_stream1 = G->create_stream(G, GN_TYPE_FLOAT, node_count, NULL);
+	G->stream->clear(data_stream0);
+	G->stream->clear(data_stream1);
+
 	float in_data[] = { 1.f, 1.f, 1.f };
-	network_stream_set_indexed(data_stream0, inputs, in_data, 0, 3);
+	G->stream->set_stream_data_indexed(data_stream0, inputs, in_data);
 
 	// calculate weigths
-	network_stream_clear(data_stream1);
-	gexnet_process_node_sum_weighted_links(data_stream1, links, weights_stream, data_stream0);
-	gexnet_process_nodes(data_stream1, data_stream1, GEXNET_FUNCTION_TANH);
-	network_stream_clear(data_stream0);
-	gexnet_process_node_sum_weighted_links(data_stream0, links, weights_stream, data_stream1);
-	gexnet_process_nodes(data_stream0, data_stream0, GEXNET_FUNCTION_TANH);
+	G->stream->multiply_add_links(data_stream1, links, data_stream0, weights_stream);
+	G->stream->process_stream(data_stream0, data_stream1, GN_FUNCTION_TANH);
+
+	G->stream->clear(data_stream1);
+	G->stream->multiply_add_links(data_stream1, links, data_stream0, weights_stream);
+	G->stream->process_stream(data_stream0, data_stream1, GN_FUNCTION_TANH);
+
+	G->stream->clear(data_stream1);
+	G->stream->multiply_add_links(data_stream1, links, data_stream0, weights_stream);
+	G->stream->process_stream(data_stream0, data_stream1, GN_FUNCTION_TANH);
 	// process weights - activation func
 	
 	// backpropagation experiments?
@@ -126,6 +121,7 @@ void main()
 
 	network_graph_destroy(graph);
 
+	G->destroy(G);
 	//gexnet_compute_forward_propagation(links, 0, 0, 0, 0, 0, 0);
 	//gexnet_compute_in_out_streams(links, node_count, &inputs, &outputs);
 }

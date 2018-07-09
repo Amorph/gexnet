@@ -268,6 +268,117 @@ static struct _StreamInterface stream_interface =
 };
 
 // --------------------------------------------------------------------------------------------------
+size_t compute_node_count(struct GNStream* stream)
+{
+	struct GNSystem* G = stream->system;
+
+	size_t max_index = 0;
+
+	if (!stream || !stream->count || stream->type != GN_TYPE_LINK)
+		return 0;
+
+	struct GNStreamLockData* lock = G->stream->lock(stream, 0, 0, 0);
+
+	if (!lock)
+		return 0;
+
+	size_t left = lock->count;
+
+	GNLink* links_data = (GNLink*)lock->data;
+	while (left--)
+	{
+		if (max_index < links_data->input)
+			max_index = links_data->input;
+		if (max_index < links_data->output)
+			max_index = links_data->output;
+		links_data++;
+	}
+
+	G->stream->unlock(lock);
+
+	return max_index + 1;
+}
+
+typedef struct
+{
+	size_t in;
+	size_t out;
+} in_out_counter;
+
+bool compute_in_out(struct GNStream* stream, size_t node_count, struct GNStream** inputs, struct GNStream** outputs)
+{
+	struct GNSystem* G = stream->system;
+
+	if (!stream || !stream->count || stream->type != GN_TYPE_LINK)
+		return 0;
+
+	if (!node_count)
+		node_count = G->compute->node_count(stream);
+
+	struct GNStreamLockData* lock = G->stream->lock(stream, 0, 0, 0);
+
+	if (!lock)
+		return 0;
+	GNLink* links_data = (GNLink*)lock->data;
+
+	in_out_counter* counter = G->mem->allocate(G, sizeof(in_out_counter) * node_count, 0);
+	memset(counter, 0, sizeof(in_out_counter) * node_count);
+
+	for (size_t i = 0; i < stream->count; i++)
+	{
+		counter[links_data[i].input].out++;
+		counter[links_data[i].output].in++;
+	}
+
+	size_t inputs_count = 0, outputs_count = 0;
+	for (size_t i = 0; i < node_count; i++)
+	{
+		if (counter[i].out && !counter[i].in)
+			inputs_count++;
+		else if (!counter[i].out && counter[i].in)
+			outputs_count++;
+	}
+	if (!inputs_count || !outputs_count)
+	{
+		G->mem->free(G, counter);
+		return false;
+	}
+	GNIndex input_idx = 0, output_idx = 0;
+
+	struct GNStream* inputs_stream = NULL;
+	struct GNStream* outputs_stream = NULL;
+
+	GNIndex* result = G->mem->allocate(G, sizeof(GNIndex) * (inputs_count + outputs_count), 0);
+	
+	GNIndex* inputs_data = result; // inputs_steam ? inputs_steam->data : 0;
+	GNIndex* outputs_data = result + inputs_count; // outputs_steam ? outputs_steam->data : 0;
+	for (GNIndex i = 0; i < node_count; i++)
+	{
+		if (inputs_data && counter[i].out && !counter[i].in)
+			inputs_data[input_idx++] = i;
+		else if (outputs_data && !counter[i].out && counter[i].in)
+			outputs_data[output_idx++] = i;
+	}
+
+	if (inputs)
+		*inputs = G->create_stream(G, GN_TYPE_INDEX, inputs_count, inputs_data);
+
+	if (outputs)
+		*outputs = G->create_stream(G, GN_TYPE_INDEX, outputs_count, outputs_data);
+
+	G->mem->free(G, result);
+	G->mem->free(G, counter);
+
+	return true;
+}
+
+static struct _ComputeInterface compute_interface =
+{
+	.node_count = compute_node_count,
+	.in_out = compute_in_out,
+};
+
+// --------------------------------------------------------------------------------------------------
 static
 struct GNStream* system_create_stream(struct GNSystem* G, GNType type, GNIndex count, void* data)
 {
@@ -299,6 +410,7 @@ static struct GNSystem
 system_interface = {
 	.mem = &memory_interface,
 	.stream = &stream_interface,
+	.compute = &compute_interface,
 	.create_stream = system_create_stream,
 	.destroy = system_destroy
 };

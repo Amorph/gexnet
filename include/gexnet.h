@@ -36,6 +36,12 @@ struct GNSystem
 		void(*process_stream)(struct GNStream*, struct GNStream* input, size_t function);
 	}*stream;
 
+	struct _ComputeInterface
+	{
+		size_t(*node_count)(struct GNStream* stream);
+		bool(*in_out)(struct GNStream* stream, size_t node_count, struct GNStream** inputs, struct GNStream** outputs);
+	}*compute;
+
 	struct GNStream* (*create_stream)(struct GNSystem*, GNType type, GNIndex count, void* data);
 
 	void(*destroy)(struct GNSystem*);
