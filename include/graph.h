@@ -2,7 +2,7 @@
 #define __GEXNET_GRAPH_H__
 
 #include "types.h"
-#include "network.h"
+#include "gexnet.h"
 
 #define NETWORK_GRAPH_INPUT_LAYER (1)
 #define NETWORK_GRAPH_OUTPUT_LAYER (0)
@@ -40,10 +40,12 @@ typedef struct
 	size_t				layers_count;
 	NetworkGraphLayer*	layers;
 	NetworkGraphNode*	nodes;
+
+	struct GNSystem*	system;
 }NetworkGraph;
 
 
-NetworkGraph*	network_graph_create(NetworkStream* links);
+NetworkGraph*	network_graph_create(struct GNStream* links);
 void			network_graph_destroy(NetworkGraph* graph);
 
 

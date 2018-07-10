@@ -1,5 +1,5 @@
 #include "graph.h"
-#include "memory.h"
+#include "stream.h"
 
 #include "processors.h"
 
@@ -10,36 +10,37 @@ typedef struct
 	size_t olink_last;
 }_NodeLinksCursor;
 
-NetworkGraph*	network_graph_create(NetworkStream* links)
+NetworkGraph*	network_graph_create(struct GNStream* links)
 {
+	struct GNSystem* G = links->system;
 	if (!links)
 		return NULL;
 
-	size_t node_count = gexnet_compute_node_count(links);
+	size_t node_count = G->compute->node_count(links);
 
 	if (!node_count)
 		return NULL;
 
-	NetworkStream *inputs, *outputs;
-	if (!gexnet_compute_in_out_streams(links, node_count, &inputs, &outputs))
+	struct GNStream *inputs, *outputs;
+	if (!G->compute->in_out(links, node_count, &inputs, &outputs))
 		return NULL;
 	
-	NetworkStreamLockData* links_stream = network_stream_lock(links, 0, 0);
-	NetworkStreamLockData* inputs_stream = network_stream_lock(inputs, 0, 0);
-	NetworkStreamLockData* outputs_stream = network_stream_lock(outputs, 0, 0);
+	struct GNStreamLockData* links_stream = G->stream->lock(links, 0, 0, 0);
+	struct GNStreamLockData* inputs_stream = G->stream->lock(inputs, 0, 0, 0);
+	struct GNStreamLockData* outputs_stream = G->stream->lock(outputs, 0, 0, 0);
 
 	if (!links_stream || !inputs_stream || !outputs_stream)
 	{
 		if (links_stream)
-			network_stream_unlock(links_stream);
+			G->stream->unlock(links_stream);
 		if (inputs_stream)
-			network_stream_unlock(inputs_stream);
+			G->stream->unlock(inputs_stream);
 		if (outputs_stream)
-			network_stream_unlock(outputs_stream);
+			G->stream->unlock(outputs_stream);
 		return false;
 	}
 
-	NetworkLink* links_data = (NetworkLink*)links->data;
+	GNLink* links_data = (GNLink*)links_stream->data;
 
 	size_t big_chunk_size = sizeof(NetworkGraph);
 	big_chunk_size += sizeof(NetworkGraphNode) * node_count; // ff_nodes
@@ -48,7 +49,7 @@ NetworkGraph*	network_graph_create(NetworkStream* links)
 	big_chunk_size += sizeof(NetworkGraphLink*) * links_stream->count; // ff_ilinks
 	big_chunk_size += sizeof(NetworkGraphLink*) * links_stream->count; // ff_olinks
 
-	uint8_t* big_chunk = allocator_get()->allocate(big_chunk_size);
+	uint8_t* big_chunk = G->mem->allocate(G, big_chunk_size, 0);
 	uint8_t* big_chunk_cursor = big_chunk;
 
 	NetworkGraph*		graph =				(NetworkGraph*)big_chunk_cursor; big_chunk_cursor += sizeof(NetworkGraph);
@@ -58,7 +59,7 @@ NetworkGraph*	network_graph_create(NetworkStream* links)
 	NetworkGraphLink**	ff_ilinks =			(NetworkGraphLink**)big_chunk_cursor; big_chunk_cursor += sizeof(NetworkGraphLink*) * links_stream->count;
 	NetworkGraphLink**	ff_olinks =			(NetworkGraphLink**)big_chunk_cursor; big_chunk_cursor += sizeof(NetworkGraphLink*) * links_stream->count;
 
-	_NodeLinksCursor*	ff_links_cursor =	allocator_get()->allocate(sizeof(_NodeLinksCursor) * node_count);
+	_NodeLinksCursor*	ff_links_cursor = G->mem->allocate(G, sizeof(_NodeLinksCursor) * node_count, 0);
 
 	for (size_t i = 0; i < node_count; i++)
 	{
@@ -103,11 +104,10 @@ NetworkGraph*	network_graph_create(NetworkStream* links)
 		inode->olinks[ff_links_cursor[inode->node_index].olink_last++] = link;
 		onode->ilinks[ff_links_cursor[onode->node_index].ilink_last++] = link;
 	}
-
-	allocator_get()->free(ff_links_cursor);
+	G->mem->free(G, ff_links_cursor);
 	ff_links_cursor = 0;
 
-	NetworkGraphLayer* ff_layers = allocator_get()->allocate(sizeof(NetworkGraphLayer) * (node_count - inputs_stream->count - outputs_stream->count + 2 + 1));
+	NetworkGraphLayer* ff_layers = G->mem->allocate(G, sizeof(NetworkGraphLayer) * (node_count - inputs_stream->count - outputs_stream->count + 2 + 1), 0);
 
 	NetworkGraphLayer* prev_layer, *input_layer, *output_layer;
 	NetworkGraphNode** last_slot = ff_layers_slots;
@@ -179,7 +179,7 @@ NetworkGraph*	network_graph_create(NetworkStream* links)
 
 	size_t layers_count = prev_layer->index + 1;
 
-	NetworkGraphLayer* layers_final = allocator_get()->allocate(sizeof(NetworkGraphLayer) * layers_count);
+	NetworkGraphLayer* layers_final = G->mem->allocate(G, sizeof(NetworkGraphLayer) * layers_count, 0);
 	for (size_t i = 0; i < layers_count; i++)
 	{
 		NetworkGraphLayer* t_layer = layers_final + i;
@@ -193,18 +193,26 @@ NetworkGraph*	network_graph_create(NetworkStream* links)
 		t_layer->nodes_count = s_layer->nodes_count;
 	}
 
-	allocator_get()->free(ff_layers);
+	G->mem->free(G, ff_layers);
 
+	graph->system = G;
 	graph->nodes = ff_nodes;
 	graph->layers = layers_final;
 	graph->layers_count = layers_count;
 
-	allocator_get()->free(ff_links_cursor);
+	G->mem->free(G, ff_links_cursor);
+
+	G->stream->unlock(links_stream);
+	G->stream->unlock(inputs_stream);
+	G->stream->unlock(outputs_stream);
+
 	return graph;
 }
 
 void network_graph_destroy(NetworkGraph* graph)
 {
-	allocator_get()->free(graph->layers);
-	allocator_get()->free(graph);
+	struct GNSystem* G = graph->system;
+
+	G->mem->free(G, graph->layers);
+	G->mem->free(G, graph);
 }
