@@ -11,6 +11,7 @@ struct GNStreamLockData
 	GNType				type;
 	void*				data;
 	GNIndex				count;
+	size_t				element_size;
 
 	struct GNStream*	stream;
 };

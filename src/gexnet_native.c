@@ -78,6 +78,7 @@ static struct GNStreamLockData* stream_lock(struct GNStream* stream, GNIndex sta
 	lock_data->stream = stream;
 	lock_data->type = stream->type;
 	lock_data->count = count;
+	lock_data->element_size = native_stream->element_size;
 	lock_data->data = ((uint8_t*)native_stream->data) + start * native_stream->element_size;
 	
 	return lock_data;
