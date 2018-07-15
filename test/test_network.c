@@ -96,8 +96,12 @@ void main()
 	G->stream->clear(data_stream1);
 
 	float in_data[] = { 1.f, 1.f, 1.f };
-	G->stream->set_stream_data_indexed(data_stream0, inputs, in_data);
-
+	{
+		struct GNStream* in_data_stream = G->create_stream(G, GN_TYPE_FLOAT, 3, in_data);
+		G->stream->set_stream_data_indexed(data_stream0, inputs, in_data_stream);
+		G->stream->destroy(in_data_stream);
+	}
+	
 	// calculate weigths
 	G->stream->multiply_add_links(data_stream1, links, data_stream0, weights_stream);
 	G->stream->process_stream(data_stream0, data_stream1, GN_FUNCTION_TANH);

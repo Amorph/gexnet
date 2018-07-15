@@ -25,7 +25,7 @@ struct GNSystem
 		// stream[i] = data[i]
 		void(*set_stream_data)(struct GNStream*, void* data, size_t count);
 		// stream[indexes[i]] = data[i]
-		void(*set_stream_data_indexed)(struct GNStream*, struct GNStream* indexes, void* data);
+		void(*set_stream_data_indexed)(struct GNStream*, struct GNStream* indexes, struct GNStream* data);
 		// output[i] = input[indexes[i]]
 		void(*get_stream_data_indexed)(struct GNStream*, struct GNStream* indexes, struct GNStream* output);
 		// stream[links[i][1]] += x[links[i][0]] * weights[i]
@@ -38,8 +38,8 @@ struct GNSystem
 
 	struct _ComputeInterface
 	{
-		size_t(*node_count)(struct GNStream* stream);
-		bool(*in_out)(struct GNStream* stream, size_t node_count, struct GNStream** inputs, struct GNStream** outputs);
+		GNIndex(*node_count)(struct GNStream* stream);
+		bool(*in_out)(struct GNStream* stream, GNIndex node_count, struct GNStream** inputs, struct GNStream** outputs);
 	}*compute;
 
 	struct GNStream* (*create_stream)(struct GNSystem*, GNType type, GNIndex count, void* data);

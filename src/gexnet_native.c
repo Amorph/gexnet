@@ -130,15 +130,16 @@ static void stream_set_stream_data(struct GNStream* stream, void* data, size_t c
 	G->stream->unlock(lock);
 }
 
-static void stream_set_stream_data_indexed(struct GNStream* stream, struct GNStream* indexes, void* data)
+static void stream_set_stream_data_indexed(struct GNStream* stream, struct GNStream* indexes, struct GNStream* data)
 {
 	struct GNSystem* G = stream->system;
 	struct GNStreamNative* native_stream = (struct GNStreamNative*)stream;
 
 	struct GNStreamLockData* s_lock = G->stream->lock(stream, 0, 0, 0);
+	struct GNStreamLockData* d_lock = G->stream->lock(data, 0, 0, 0);
 	struct GNStreamLockData* i_lock = G->stream->lock(indexes, 0, 0, 0);
 	uint8_t* target_data = s_lock->data;
-	uint8_t* source_data = data;
+	uint8_t* source_data = d_lock->data;
 	GNIndex* index_data = i_lock->data;
 
 	size_t es = native_stream->element_size;
@@ -148,6 +149,7 @@ static void stream_set_stream_data_indexed(struct GNStream* stream, struct GNStr
 
 	G->stream->unlock(s_lock);
 	G->stream->unlock(i_lock);
+	G->stream->unlock(d_lock);
 }
 
 static void stream_get_stream_data_indexed(struct GNStream* stream, struct GNStream* indexes, struct GNStream* output)
@@ -269,11 +271,11 @@ static struct _StreamInterface stream_interface =
 };
 
 // --------------------------------------------------------------------------------------------------
-size_t compute_node_count(struct GNStream* stream)
+GNIndex compute_node_count(struct GNStream* stream)
 {
 	struct GNSystem* G = stream->system;
 
-	size_t max_index = 0;
+	GNIndex max_index = 0;
 
 	if (!stream || !stream->count || stream->type != GN_TYPE_LINK)
 		return 0;
@@ -283,7 +285,7 @@ size_t compute_node_count(struct GNStream* stream)
 	if (!lock)
 		return 0;
 
-	size_t left = lock->count;
+	GNIndex left = lock->count;
 
 	GNLink* links_data = (GNLink*)lock->data;
 	while (left--)
@@ -302,11 +304,11 @@ size_t compute_node_count(struct GNStream* stream)
 
 typedef struct
 {
-	size_t in;
-	size_t out;
+	GNIndex in;
+	GNIndex out;
 } in_out_counter;
 
-bool compute_in_out(struct GNStream* stream, size_t node_count, struct GNStream** inputs, struct GNStream** outputs)
+bool compute_in_out(struct GNStream* stream, GNIndex node_count, struct GNStream** inputs, struct GNStream** outputs)
 {
 	struct GNSystem* G = stream->system;
 
@@ -325,14 +327,14 @@ bool compute_in_out(struct GNStream* stream, size_t node_count, struct GNStream*
 	in_out_counter* counter = G->mem->allocate(G, sizeof(in_out_counter) * node_count, 0);
 	memset(counter, 0, sizeof(in_out_counter) * node_count);
 
-	for (size_t i = 0; i < stream->count; i++)
+	for (GNIndex i = 0; i < stream->count; i++)
 	{
 		counter[links_data[i].input].out++;
 		counter[links_data[i].output].in++;
 	}
 
-	size_t inputs_count = 0, outputs_count = 0;
-	for (size_t i = 0; i < node_count; i++)
+	GNIndex inputs_count = 0, outputs_count = 0;
+	for (GNIndex i = 0; i < node_count; i++)
 	{
 		if (counter[i].out && !counter[i].in)
 			inputs_count++;
