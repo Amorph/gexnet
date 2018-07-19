@@ -111,7 +111,7 @@ static void stream_copy(struct GNStream* stream, struct GNStream* input)
 	struct GNStreamLockData* y_lock = G->stream->lock(stream, 0, 0, 0);
 	struct GNStreamLockData* x_lock = G->stream->lock(input, 0, 0, 0);
 
-	memcpy(y_lock->data, x_lock, native_stream->element_size * x_lock->count);
+	memcpy(y_lock->data, x_lock->data, native_stream->element_size * x_lock->count);
 
 	G->stream->unlock(x_lock);
 	G->stream->unlock(y_lock);
